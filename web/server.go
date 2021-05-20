@@ -20,9 +20,15 @@ func Run (h hub.Hub) error {
 	log.Println("Running HUB server on port: 10000")
 	http.HandleFunc("/register", registerAPI(h))
 	http.HandleFunc("/connect", connectAPI(h))
+	http.HandleFunc("/health-check", healthCheck)
 	return http.ListenAndServe(":10000", nil)
 }
 
+func healthCheck(w http.ResponseWriter, r * http.Request) {
+	data := []byte("Server works")
+	w.Write(data)
+	w.WriteHeader(200)
+}
 
 func registerAPI(h hub.Hub) func(w http.ResponseWriter, r * http.Request) {
 	return func (w http.ResponseWriter, r * http.Request) {
