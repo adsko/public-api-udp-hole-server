@@ -55,11 +55,11 @@ func (h *hub) GetConnection(name string) ([]string, string) {
 	return v, h.p[name]
 }
 
-func (h *hub) Inform(name string, addr []string, port string, clientId uint64) {
+func (h *hub) Inform(name string, addr []string, port string, clientId uint64, clientSecret, serverSecret string) {
 	c, ok := h.c[name]
 
 	if ok {
-		c(addr, port, clientId)
+		c(addr, port, clientId, clientSecret, serverSecret)
 	}
 }
 
@@ -67,14 +67,14 @@ func (h *hub) OnInform(name string, callback informCallback) {
 	h.c[name] = callback
 }
 
-type informCallback func([]string, string, uint64)
+type informCallback func([]string, string, uint64, string, string)
 
 
 type Hub interface {
 	Register(name string, ip []string, port string) error
 	Unregister(name string)
 	GetConnection(name string) ([]string, string)
-	Inform(name string, addr []string, port string, clientId uint64)
+	Inform(name string, addr []string, port string, clientId uint64, clientSecret, serverSecret string)
 	OnInform(name string, callback informCallback)
 }
 

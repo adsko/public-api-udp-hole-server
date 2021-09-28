@@ -5,10 +5,13 @@ import (
 	"github.com/gorilla/websocket"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"server/hub"
+	"time"
 )
 
+var r *rand.Rand // Rand for this package.
 var clientId uint64 = 1
 
 var upgrader = websocket.Upgrader{
@@ -17,6 +20,8 @@ var upgrader = websocket.Upgrader{
 }
 
 func Run (h hub.Hub) error {
+	r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	log.Println("Running HUB server on port: 10000")
 	http.HandleFunc("/register", registerAPI(h))
 	http.HandleFunc("/connect", connectAPI(h))
@@ -26,8 +31,8 @@ func Run (h hub.Hub) error {
 
 func healthCheck(w http.ResponseWriter, r * http.Request) {
 	data := []byte("Server works")
-	w.Write(data)
 	w.WriteHeader(200)
+	w.Write(data)
 }
 
 func registerAPI(h hub.Hub) func(w http.ResponseWriter, r * http.Request) {
@@ -54,8 +59,8 @@ func registerAPI(h hub.Hub) func(w http.ResponseWriter, r * http.Request) {
 			return
 		}
 
-		h.OnInform(registerData.Name, func(addr []string, port string, clientId uint64) {
-			oc := openConnection{Addr: addr, Port: port, ClientID: clientId, Secret: "0123456789123456"}
+		h.OnInform(registerData.Name, func(addr []string, port string, clientId uint64, clientSecret, serverSecret string) {
+			oc := openConnection{Addr: addr, Port: port, ClientID: clientId, ClientSecret: clientSecret, ServerSecret: serverSecret}
 			log.Printf("Opening connection from %s to %s", registerData.Name, addr)
 			conn.WriteJSON(oc)
 		})
@@ -101,7 +106,8 @@ func connectAPI(h hub.Hub) func(w http.ResponseWriter, r * http.Request) {
 			Addr: ips,
 			Port: port,
 			ClientID: clientId,
-			Secret: "0123456789123456",
+			ClientSecret: RandomString(16),
+			ServerSecret: RandomString(16),
 		}
 
 		responseJson, err := json.Marshal(response)
@@ -110,9 +116,18 @@ func connectAPI(h hub.Hub) func(w http.ResponseWriter, r * http.Request) {
 			log.Panic(err)
 		}
 
-		h.Inform(m.Server, m.Addr, m.Port, clientId)
+		h.Inform(m.Server, m.Addr, m.Port, clientId, response.ClientSecret, response.ServerSecret)
 		clientId += 1
 		w.WriteHeader(200)
 		w.Write(responseJson)
 	}
+}
+
+func RandomString(strlen int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, strlen)
+	for i := range result {
+		result[i] = chars[r.Intn(len(chars))]
+	}
+	return string(result)
 }

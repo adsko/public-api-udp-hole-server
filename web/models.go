@@ -18,12 +18,14 @@ type connectResponse struct {
 	Addr []string
 	Port string
 	ClientID uint64
-	Secret string
+	ClientSecret string
+	ServerSecret string
 }
 
 type openConnection struct {
 	Addr     []string
 	Port     string
 	ClientID uint64
-	Secret string
+	ClientSecret string
+	ServerSecret string
 }
