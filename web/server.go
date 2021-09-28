@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"server/hub"
 	"time"
 )
@@ -20,13 +21,14 @@ var upgrader = websocket.Upgrader{
 }
 
 func Run (h hub.Hub) error {
+	port := os.Getenv("PORT")
+
 	r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	log.Println("Running HUB server on port: 10000")
 	http.HandleFunc("/register", registerAPI(h))
 	http.HandleFunc("/connect", connectAPI(h))
 	http.HandleFunc("/health-check", healthCheck)
-	return http.ListenAndServe(":10000", nil)
+	return http.ListenAndServe(":" + port, nil)
 }
 
 func healthCheck(w http.ResponseWriter, r * http.Request) {
