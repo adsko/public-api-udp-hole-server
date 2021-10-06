@@ -23,11 +23,18 @@ var upgrader = websocket.Upgrader{
 func Run (h hub.Hub) error {
 	port := os.Getenv("PORT")
 
+	if len(port) == 0 {
+		log.Println("PORT env not found, setting: 8181 as default port")
+		port = "8181"
+	}
+
 	r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	http.HandleFunc("/register", registerAPI(h))
 	http.HandleFunc("/connect", connectAPI(h))
 	http.HandleFunc("/health-check", healthCheck)
+
+	log.Println("Running server on: " + port)
 	return http.ListenAndServe(":" + port, nil)
 }
 
