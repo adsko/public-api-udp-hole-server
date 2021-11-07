@@ -1,4 +1,4 @@
-API which helps making connection between clients and servers.
+Rendezvous API server which helps making connection between clients and servers.
 
 ### Requirements
 * Go 1.16+
